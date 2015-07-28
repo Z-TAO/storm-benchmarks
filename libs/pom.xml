@@ -9,13 +9,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>SOL</artifactId>
+    <artifactId>libs</artifactId>
     <dependencies>
-        <dependency>
-            <groupId>storm-benchmarks</groupId>
-            <artifactId>libs</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
     </dependencies>
     <build>
         <sourceDirectory>src/main</sourceDirectory>

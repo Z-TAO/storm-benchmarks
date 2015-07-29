@@ -23,7 +23,7 @@ public class MetricComponent{
     private static ArrayList<ArrayList<Long>> _GCounts = new ArrayList<ArrayList<Long>>();
     private static ArrayList<ArrayList<Long>> _GBytes = new ArrayList<ArrayList<Long>>();
     private static ArrayList<String> _registedNames = new ArrayList<String>();
-
+    public static boolean startflag = true;
     public MetricComponent(){
     }
     private static ArrayList<Long> initData(int size){
@@ -48,7 +48,9 @@ public class MetricComponent{
         count = _GBytes.get(componentId).get(index) + size;
         _GBytes.get(componentId).set(index, count);
     }
-
+    public static void stop(){
+        startflag = false;
+    }
 
     public static ArrayList<ArrayList<Long>> getTotalCount() {
         return _GCounts;

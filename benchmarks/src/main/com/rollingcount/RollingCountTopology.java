@@ -7,7 +7,7 @@ import backtype.storm.topology.TopologyBuilder;
 
 import backtype.storm.tuple.Fields;
 import com.metrics.Metrics;
-import com.metrics.RollingCountBolt;
+import com.bolts.RollingCountBolt;
 import com.spouts.TwitterTrendSpout;
 
 public class RollingCountTopology {

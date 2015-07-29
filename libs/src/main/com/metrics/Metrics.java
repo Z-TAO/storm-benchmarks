@@ -30,7 +30,7 @@ public class Metrics {
 
 
         public void run() {
-            if (_startTag){
+            if (MetricComponent.startflag){
 
                 long timeInterval = System.currentTimeMillis() - lastUpdatedTime;
                 //lastUpdatedTime = System.currentTimeMillis();

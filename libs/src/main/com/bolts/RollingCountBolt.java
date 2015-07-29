@@ -1,4 +1,4 @@
-package com.metrics;
+package com.bolts;
 
 import backtype.storm.task.OutputCollector;
 import backtype.storm.task.TopologyContext;
@@ -7,6 +7,7 @@ import backtype.storm.topology.base.BaseRichBolt;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.utils.Utils;
 import com.lmax.disruptor.RingBuffer;
+import com.metrics.MetricComponent;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.security.acl.LastOwnerException;

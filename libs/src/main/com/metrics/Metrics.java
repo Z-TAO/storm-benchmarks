@@ -1,7 +1,11 @@
 package com.metrics;
 
 
+import backtype.storm.utils.Utils;
+
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by tao on 28/07/15.
@@ -9,63 +13,63 @@ import java.util.ArrayList;
 public class Metrics {
 
     private ArrayList<IMetric> _registedObj = new ArrayList<IMetric>();
-    public boolean _startTag = false;
-    private long _lastSampleTime;
-    private long SAMPLE_INTERVAL;
+    public static boolean _startTag = false;
+    private static long SAMPLE_INTERVAL;
     private static final long DEFAULT_SAMPLE_INTERVAL = 1000;
     private static ArrayList<Long []> _lastTimeData = new ArrayList<Long[]>();
     private static ArrayList<Long []> _lastTimeDataMB = new ArrayList<Long[]>();
+    long lastUpdatedTime = System.currentTimeMillis();
+
     private void printHeader(){
         System.out.println("Name\tTask Num\ttotal counts\tthroughput(MB/s)\tthroughput(tuples/s)\treceived size(MB)");
     }
-    private void printData(String name, int taskNum, long totalCounts, double throughput, double throughputt, long receivedsize){
+    private static void printData(String name, int taskNum, long totalCounts, double throughput, double throughputt, long receivedsize){
         System.out.print(String.format("%s\t%d\t%d\t%.3f MB/s\t%.3f Tuples/s\t%d\r\n", name, taskNum, totalCounts, throughput, throughputt, receivedsize));
     }
-    private Thread _Monitor = new Thread(new Runnable() {
+    private TimerTask tt = new TimerTask() {
+
+
         public void run() {
-            try{
-                while (true){
-                    if (System.currentTimeMillis() - _lastSampleTime > SAMPLE_INTERVAL && _startTag){
-                        //sample once
-                        int metricIndex = 0;
-                        for (ArrayList<Long> totalByte : MetricComponent.getTotalBytes()) {
-                            String name = MetricComponent.getName().get(metricIndex);
-                            long totalCounts = 0;
-                            double speed = 0;
-                            double speedMB = 0;
-                            ArrayList<Long> totalCount = MetricComponent.getTotalCount().get(metricIndex);
+            if (_startTag){
 
-                            for (int i = 0; i <totalCount.size(); i++) {
+                long timeInterval = System.currentTimeMillis() - lastUpdatedTime;
+                //lastUpdatedTime = System.currentTimeMillis();
+                //sample once
+                int metricIndex = 0;
+                for (ArrayList<Long> totalByte : MetricComponent.getTotalBytes()) {
+                    String name = MetricComponent.getName().get(metricIndex);
+                    long totalCounts = 0;
+                    double speed = 0;
+                    double speedMB = 0;
+                    ArrayList<Long> totalCount = MetricComponent.getTotalCount().get(metricIndex);
 
-                                speedMB += (double)(totalByte.get(i) - _lastTimeDataMB.get(metricIndex)[i])/SAMPLE_INTERVAL /1000.0;
-                                speed += (double)(totalCount.get(i) - _lastTimeData.get(metricIndex)[i])/SAMPLE_INTERVAL * 1000.0;
-                                totalCounts += totalCount.get(i);
-                                //totalBytes += totalByte[i];
-                                _lastTimeData.get(metricIndex)[i] = totalCount.get(i);
-                                _lastTimeDataMB.get(metricIndex)[i] = totalByte.get(i);
-                            }
+                    for (int i = 0; i <totalCount.size(); i++) {
 
-                            printData(name, totalCount.size(), totalCounts, speedMB, speed, 0);
-                            metricIndex++;
-                        }
+                        //speedMB += (double)(totalByte.get(i) - _lastTimeDataMB.get(metricIndex)[i])/timeInterval /1000.0;
+                        speedMB += (double)(totalByte.get(i))/timeInterval /1000.0;
+                        //speed += (double)(totalCount.get(i) - _lastTimeData.get(metricIndex)[i])/timeInterval * 1000.0;
+                        speed += (double)(totalCount.get(i))/timeInterval * 1000.0;
 
-                        _lastSampleTime = System.currentTimeMillis();
-                        Thread.sleep(SAMPLE_INTERVAL);
-                    }else{
-                        Thread.sleep(100);
+
+
+                        totalCounts += totalCount.get(i);
+                        //totalBytes += totalByte[i];
+                        _lastTimeData.get(metricIndex)[i] = totalCount.get(i);
+                        _lastTimeDataMB.get(metricIndex)[i] = totalByte.get(i);
                     }
+
+                    printData(name, totalCount.size(), totalCounts, speedMB, speed, 0);
+                    metricIndex++;
                 }
-            }catch(InterruptedException e){
-                System.out.println("Metrics Interrupted.");
             }
         }
-    });
+    };
+    Timer monitor;
+
 
     public Metrics(long SampleInterval){
-        _lastSampleTime = System.currentTimeMillis();
         SAMPLE_INTERVAL = SampleInterval;
-        _Monitor.setPriority(Thread.MAX_PRIORITY);
-        _Monitor.start();
+        monitor = new Timer();
     }
 
     public static void register(int size){
@@ -86,6 +90,11 @@ public class Metrics {
     public void start(){
         _startTag = true;
         printHeader();
+        while (MetricComponent.getTotalBytes().get(0).get(0) == 0){
+            lastUpdatedTime = System.currentTimeMillis();
+            Utils.sleep(10);
+        }
+        monitor.schedule(tt, 0, SAMPLE_INTERVAL);
     }
 
     public void stop(){

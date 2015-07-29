@@ -18,7 +18,6 @@ package com.spouts;
  * limitations under the License.
  */
 
-import backtype.storm.Config;
 import backtype.storm.spout.SpoutOutputCollector;
 import backtype.storm.task.TopologyContext;
 import backtype.storm.topology.OutputFieldsDeclarer;
@@ -26,21 +25,24 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import backtype.storm.utils.Utils;
-import com.metrics.IMetric;
 import com.metrics.MetricComponent;
-import com.metrics.Metrics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
+import java.security.spec.ECField;
 import java.util.Map;
 import java.util.Random;
 
 
 
 public class TwitterTrendSpout extends BaseRichSpout {
-    public static Logger LOG = LoggerFactory.getLogger(TwitterTrendSpout.class);
     SpoutOutputCollector _collector;
-    static int _Componentid;
+    private static int _Componentid;
+    private int _index;
+    private String [] data;
+
 
     public TwitterTrendSpout(String name, int NumTask) {
         _Componentid = MetricComponent.register(name, NumTask);
@@ -48,6 +50,19 @@ public class TwitterTrendSpout extends BaseRichSpout {
 
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         _collector = collector;
+        _index = context.getThisTaskIndex();
+        File f = new File("./random_text_generator.txt");
+        byte [] stream = new byte[(int)f.length()];
+        try{
+            FileInputStream fi = new FileInputStream(f);
+            fi.read(stream);
+            String x = new String(stream);
+            data = x.split(" ");
+
+        }catch (Exception e){
+
+        }
+
     }
 
     public void close() {
@@ -55,12 +70,13 @@ public class TwitterTrendSpout extends BaseRichSpout {
     }
 
     public void nextTuple() {
-        Utils.sleep(100);
-        final String[] words = new String[] {"nathan", "mike", "jackson", "golda", "bertels"};
+        //
+
         final Random rand = new Random();
-        final String word = words[rand.nextInt(words.length)];
-        //o.tick(word.length());
+        final String word = data[rand.nextInt(data.length)];
+        MetricComponent.tick(_Componentid, _index, word.length());
         _collector.emit(new Values(word));
+        //Utils.sleep(1);
     }
 
     public void ack(Object msgId) {

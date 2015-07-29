@@ -13,9 +13,9 @@ public class SOLTopology {
 
 
     public static void main(String args[]){
-        int SPOUT_NUM = 2;
-        int BOLT_NUM = 2;
-        int LEVEL = 3;
+        int SPOUT_NUM = 3;
+        int BOLT_NUM = 4;
+        int LEVEL = 1;
         TopologyBuilder builder = new TopologyBuilder();
         Metrics m = new Metrics(1000);
         RandomEmitSpouts res = new RandomEmitSpouts("RandomOutput", 4, SPOUT_NUM);
@@ -32,6 +32,7 @@ public class SOLTopology {
 
 
         LocalCluster ls = new LocalCluster();
+
         ls.submitTopology("SOL", new Config(), builder.createTopology());
 
         m.start();

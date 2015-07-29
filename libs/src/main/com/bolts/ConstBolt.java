@@ -39,7 +39,7 @@ public class ConstBolt extends BaseRichBolt{
         byte[] data = tuple.getBinary(0);
         MetricComponent.tick(_componentId, _localIndex, data.length);
         _collector.emit(new Values(data));
-        System.out.println("out --" + _componentId + "\t" + _localIndex + "\t" + original);
+        //System.out.println("out --" + _componentId + "\t" + _localIndex + "\t" + original);
         totalTransferred += data.length;
 
     }

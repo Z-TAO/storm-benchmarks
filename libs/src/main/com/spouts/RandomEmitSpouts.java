@@ -11,46 +11,39 @@ import backtype.storm.topology.base.BaseRichSpout;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
 import com.metrics.IMetric;
+import com.metrics.MetricComponent;
 
 import java.util.Map;
 import java.util.Random;
 
-public class RandomEmitSpouts extends BaseRichSpout implements IMetric {
+public class RandomEmitSpouts extends BaseRichSpout {
 
     private int EMIT_SIZE;
     private static final int _DEFAULT_EMIT_SIZE = 100;
-    private int NUM_TASKS;
-
-
-    private static long [] _totalCount;
-    private String _name;
 
     private Random _r;
     private SpoutOutputCollector _collector;
-    private int _currentIndex;
+    private int _localIndex;
+    private int _componentId;
 
     public RandomEmitSpouts(String name, int size, int taskNum){
         EMIT_SIZE = size;
-        NUM_TASKS = taskNum;
-        _totalCount = new long[NUM_TASKS];
-        _name = name;
+        _componentId = MetricComponent.register(name,taskNum);
     }
     public RandomEmitSpouts(String name, int taskNum){
         this(name, _DEFAULT_EMIT_SIZE, taskNum);
     }
 
-
     public void open(Map map, TopologyContext topologyContext, SpoutOutputCollector spoutOutputCollector) {
         _collector = spoutOutputCollector;
-        _currentIndex = topologyContext.getThisTaskIndex();
         _r = new Random(System.currentTimeMillis());
-        _totalCount[_currentIndex] = 0;
+        _localIndex = topologyContext.getThisTaskIndex();
     }
 
     public void nextTuple() {
-        _totalCount[_currentIndex] ++;
         byte [] data = new byte[EMIT_SIZE];
         _r.nextBytes(data);
+        MetricComponent.tick(_componentId, _localIndex, data.length);
         _collector.emit(new Values(data));
     }
 
@@ -60,22 +53,4 @@ public class RandomEmitSpouts extends BaseRichSpout implements IMetric {
 
     public long getEmitSize(){return EMIT_SIZE;}
 
-    @Override
-    public long[] getTotalCount() {
-        return _totalCount;
-    }
-
-    @Override
-    public long[] getTotalBytes() {
-        long [] data = new long [NUM_TASKS];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = _totalCount[i] * EMIT_SIZE;
-        }
-        return data;
-    }
-
-    @Override
-    public String getName() {
-        return _name;
-    }
 }

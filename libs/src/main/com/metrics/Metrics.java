@@ -13,13 +13,13 @@ public class Metrics {
     private long _lastSampleTime;
     private long SAMPLE_INTERVAL;
     private static final long DEFAULT_SAMPLE_INTERVAL = 1000;
-    private ArrayList<Long []> _lastTimeData = new ArrayList<Long[]>();
-    private ArrayList<Long []> _lastTimeDataMB = new ArrayList<Long[]>();
+    private static ArrayList<Long []> _lastTimeData = new ArrayList<Long[]>();
+    private static ArrayList<Long []> _lastTimeDataMB = new ArrayList<Long[]>();
     private void printHeader(){
         System.out.println("Name\tTask Num\ttotal counts\tthroughput(MB/s)\tthroughput(tuples/s)\treceived size(MB)");
     }
     private void printData(String name, int taskNum, long totalCounts, double throughput, double throughputt, long receivedsize){
-        System.out.print(String.format("%s\t%d\t%d\t%.3f\t%.3f\t%d\r\n", name, taskNum, totalCounts, throughput, throughputt, receivedsize));
+        System.out.print(String.format("%s\t%d\t%d\t%.3f MB/s\t%.3f Tuples/s\t%d\r\n", name, taskNum, totalCounts, throughput, throughputt, receivedsize));
     }
     private Thread _Monitor = new Thread(new Runnable() {
         public void run() {
@@ -28,27 +28,27 @@ public class Metrics {
                     if (System.currentTimeMillis() - _lastSampleTime > SAMPLE_INTERVAL && _startTag){
                         //sample once
                         int metricIndex = 0;
-                        for (IMetric metric : _registedObj) {
-                            String name = metric.getName();
+                        for (ArrayList<Long> totalByte : MetricComponent.getTotalBytes()) {
+                            String name = MetricComponent.getName().get(metricIndex);
                             long totalCounts = 0;
                             double speed = 0;
                             double speedMB = 0;
-                            long [] totalCount = metric.getTotalCount();
-                            long [] totalByte = metric.getTotalBytes();
+                            ArrayList<Long> totalCount = MetricComponent.getTotalCount().get(metricIndex);
 
-                            for (int i = 0; i <totalCount.length; i++) {
+                            for (int i = 0; i <totalCount.size(); i++) {
 
-                                speedMB += (double)(totalByte[i] - _lastTimeDataMB.get(metricIndex)[i])/SAMPLE_INTERVAL;
-                                speed += (double)(totalCount[i] - _lastTimeData.get(metricIndex)[i])/SAMPLE_INTERVAL * 1000.0;
-                                totalCounts += totalCount[i];
+                                speedMB += (double)(totalByte.get(i) - _lastTimeDataMB.get(metricIndex)[i])/SAMPLE_INTERVAL /1000.0;
+                                speed += (double)(totalCount.get(i) - _lastTimeData.get(metricIndex)[i])/SAMPLE_INTERVAL * 1000.0;
+                                totalCounts += totalCount.get(i);
                                 //totalBytes += totalByte[i];
-                                _lastTimeData.get(metricIndex)[i] = totalCount[i];
-                                _lastTimeDataMB.get(metricIndex)[i] = totalByte[i];
+                                _lastTimeData.get(metricIndex)[i] = totalCount.get(i);
+                                _lastTimeDataMB.get(metricIndex)[i] = totalByte.get(i);
                             }
 
-                            printData(name, totalCount.length, totalCounts, speedMB, speed, 0);
+                            printData(name, totalCount.size(), totalCounts, speedMB, speed, 0);
                             metricIndex++;
                         }
+
                         _lastSampleTime = System.currentTimeMillis();
                         Thread.sleep(SAMPLE_INTERVAL);
                     }else{
@@ -68,9 +68,7 @@ public class Metrics {
         _Monitor.start();
     }
 
-    public void register(Object o){
-        _registedObj.add((IMetric)o);
-        int size = ((IMetric) o).getTotalCount().length;
+    public static void register(int size){
         Long [] data = new Long[size];
         Long [] dataMB = new Long[size];
         for (int i = 0; i < data.length; i++) {

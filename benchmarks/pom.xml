@@ -8,13 +8,17 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>SOL</artifactId>
+    <artifactId>benchmarks</artifactId>
     <dependencies>
         <dependency>
             <groupId>storm-benchmarks</groupId>
             <artifactId>libs</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.twitter4j</groupId>
+            <artifactId>twitter4j-stream</artifactId>
+            <version>[4.0,)</version>
         </dependency>
     </dependencies>
     <build>
@@ -29,7 +33,8 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass></mainClass>
+                            <mainClass>com.rollingcount.DataGenerator</mainClass>
+                            <mainClass>com.sol.SOLTopology</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

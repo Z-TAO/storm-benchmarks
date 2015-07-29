@@ -8,57 +8,44 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 import backtype.storm.tuple.Values;
 import com.metrics.IMetric;
+import com.metrics.MetricComponent;
 
 import java.util.Map;
 
 /**
  * Created by tao on 27/07/15.
  */
-public class ConstBolt extends BaseRichBolt implements IMetric{
-
-    private static long [] _totalReceivedBytes;
-    private static long [] _totalCounts;
+public class ConstBolt extends BaseRichBolt{
 
     private OutputCollector _collector;
-    private String _name;
+    private int _localIndex;
+    private int _componentId;
+    public long totalTransferred;
+    public boolean original = false;
 
-    private int _currentIndex;
     public ConstBolt(String name, int taskNum){
-        _totalReceivedBytes = new long[taskNum];
-        _totalCounts = new long[taskNum];
-        _name = name;
+        _componentId = MetricComponent.register(name, taskNum);
+        original = true;
     }
 
     public void prepare(Map map, TopologyContext topologyContext, OutputCollector outputCollector) {
         _collector = outputCollector;
-        //_name = topologyContext.getThisComponentId();
-        _currentIndex = topologyContext.getThisTaskIndex();
-
+        _localIndex = topologyContext.getThisTaskIndex();
+        //System.out.println("init -- "+_localIndex);
+        totalTransferred = 0;
     }
 
     public void execute(Tuple tuple) {
         byte[] data = tuple.getBinary(0);
-        _totalReceivedBytes[_currentIndex] += data.length;
-        _totalCounts[_currentIndex] ++;
+        MetricComponent.tick(_componentId, _localIndex, data.length);
         _collector.emit(new Values(data));
+        System.out.println("out --" + _componentId + "\t" + _localIndex + "\t" + original);
+        totalTransferred += data.length;
+
     }
 
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
         outputFieldsDeclarer.declare(new Fields("object"));
     }
 
-    @Override
-    public long[] getTotalCount() {
-        return _totalCounts;
-    }
-
-    @Override
-    public String getName() {
-        return _name;
-    }
-
-    @Override
-    public long[] getTotalBytes() {
-        return _totalReceivedBytes;
-    }
 }

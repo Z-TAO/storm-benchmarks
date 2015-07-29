@@ -11,29 +11,23 @@ import com.spouts.RandomEmitSpouts;
 
 public class SOLTopology {
 
-    private static void output(long [] data){
-        for (long l : data) {
-            System.out.print(l+" ");
-        }
-        System.out.println();
-    }
 
     public static void main(String args[]){
+        int SPOUT_NUM = 2;
+        int BOLT_NUM = 2;
+        int LEVEL = 3;
         TopologyBuilder builder = new TopologyBuilder();
         Metrics m = new Metrics(1000);
-        RandomEmitSpouts res = new RandomEmitSpouts("RandomOutput", 1000, 10);
-        m.register(res);
-        int LEVEL = 3;
+        RandomEmitSpouts res = new RandomEmitSpouts("RandomOutput", 4, SPOUT_NUM);
         ConstBolt [] cb = new ConstBolt[LEVEL];
         for (int i = 0; i < LEVEL; i++) {
-            cb[i] = new ConstBolt("constBolt_"+i,10);
-            m.register(cb[i]);
+            cb[i] = new ConstBolt("constBolt_"+i,BOLT_NUM);
         }
 
-        builder.setSpout("RandomOutput", res, 10).setNumTasks(10);
-        builder.setBolt("constBolt_0", cb[0], 10).setNumTasks(10).shuffleGrouping("RandomOutput");
+        builder.setSpout("RandomOutput", res, SPOUT_NUM);
+        builder.setBolt("constBolt_0", cb[0], BOLT_NUM).setNumTasks(BOLT_NUM).shuffleGrouping("RandomOutput");
         for (int i = cb.length - 1; i > 0; i--) {
-            builder.setBolt("constBolt_" + i, cb[i], 10).setNumTasks(10).shuffleGrouping("constBolt_" + (i-1));
+            builder.setBolt("constBolt_" + i, cb[i], BOLT_NUM).setNumTasks(BOLT_NUM).shuffleGrouping("constBolt_" + (i-1));
         }
 
 

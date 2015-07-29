@@ -8,5 +8,6 @@ public interface IMetric {
     long [] getTotalCount();
     String getName();
     long [] getTotalBytes();
+    void tick(int index, int size);
 
 }

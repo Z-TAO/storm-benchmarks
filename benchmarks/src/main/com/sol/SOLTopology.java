@@ -12,12 +12,12 @@ import com.spouts.RandomEmitSpouts;
 public class SOLTopology {
 
 
-    public static void main(String args[]){
-        int SPOUT_NUM = 3;
-        int BOLT_NUM = 4;
-        int LEVEL = 1;
+    public static void main(String args[]) throws Exception{
+        int SPOUT_NUM = 10;
+        int BOLT_NUM = 10;
+        int LEVEL = 8;
         TopologyBuilder builder = new TopologyBuilder();
-        Metrics m = new Metrics(1000);
+        Metrics m = new Metrics(1000, args[0]);
         RandomEmitSpouts res = new RandomEmitSpouts("RandomOutput", 4, SPOUT_NUM);
         ConstBolt [] cb = new ConstBolt[LEVEL];
         for (int i = 0; i < LEVEL; i++) {
@@ -34,7 +34,6 @@ public class SOLTopology {
         LocalCluster ls = new LocalCluster();
 
         ls.submitTopology("SOL", new Config(), builder.createTopology());
-
         m.start();
 
     }

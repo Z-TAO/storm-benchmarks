@@ -14,7 +14,7 @@ public class RollingCountTopology {
 
 
     public static void main(String args[]){
-        int SPOUT_NUM = 1;
+        int SPOUT_NUM = 5;
         int BOLT_NUM = 5;
         TopologyBuilder builder = new TopologyBuilder();
         Metrics m = new Metrics(1000);

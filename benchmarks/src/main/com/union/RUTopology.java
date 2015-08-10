@@ -16,7 +16,7 @@ public class RUTopology {
 
 
     public static void main(String args[]) throws Exception{
-        int SPOUT_NUM = 2;
+        int SPOUT_NUM = 7;
         int BOLT_NUM = 10;
         TopologyBuilder builder = new TopologyBuilder();
         Metrics m = new Metrics(1000);
